@@ -1,3 +1,21 @@
 spring:
   application:
     name: macina-be
+    
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+
+  profiles:
+    active: worker
+    
+temporal:
+  address: 127.0.0.1:7233
+  namespace: default
+  
+
+server:
+  servlet:
+    context-path: /macina-be
+
