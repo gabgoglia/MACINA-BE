@@ -8,14 +8,22 @@ spring:
       - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
 
   profiles:
-    active: worker
+    active: worker #local #worker
     
 temporal:
   address: 127.0.0.1:7233
   namespace: default
-  
 
 server:
   servlet:
     context-path: /macina-be
+    
+logging:
+  level:
+    root: INFO
+    it.credem.macina_be: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN
+  file:
+    name: logs/macina-be.log
 

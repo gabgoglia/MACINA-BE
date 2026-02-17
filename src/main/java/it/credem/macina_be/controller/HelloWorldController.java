@@ -4,6 +4,7 @@ import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowOptions;
 import it.credem.macina_be.model.dto.HelloResponseDto;
 import it.credem.macina_be.model.entity.Person;
+import it.credem.macina_be.service.HelloService;
 import it.credem.macina_be.service.HelloWorldService;
 import it.credem.macina_be.temporal.workflow.HelloWorkflow;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,8 @@ import java.util.UUID;
 public class HelloWorldController {
 
     private final HelloWorldService service;
+
+    private final HelloService helloService;
 
     @Autowired
     WorkflowClient client;
@@ -47,15 +50,8 @@ public class HelloWorldController {
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.TEXT_HTML_VALUE})
     ResponseEntity helloSample(@RequestBody String firstName) {
-        HelloWorkflow workflow =
-                client.newWorkflowStub(
-                        HelloWorkflow.class,
-                        WorkflowOptions.newBuilder()
-                                .setTaskQueue("HELLO_TQ")
-                                .setWorkflowId("HelloSample-" + UUID.randomUUID())
-                                .build());
 
-        // bypass thymeleaf, don't return template name just result
-        return new ResponseEntity<>("\"" + workflow.sayHello(firstName) + "\"", HttpStatus.OK);
+        String result = helloService.startHello(firstName);
+        return ResponseEntity.ok(result);
     }
 }
