@@ -8,7 +8,8 @@ import org.springframework.stereotype.Component;
 @Log4j2
 public class HelloActivitiesImpl implements HelloActivities {
 
-    private static Integer attempt = 0;
+    private int attempt = 0;
+
     @Override
     public String composeGreeting(String name) {
         attempt++;
