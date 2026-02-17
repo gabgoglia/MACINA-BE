@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30" packages="">
+    <!-- Variabili riutilizzabili -->
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg %ex%n</Property>
+        <Property name="FILE_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %X{wfId} %X{runId} %logger{36} - %msg %ex%n</Property>
+        <Property name="LOG_DIR">logs</Property>
+        <Property name="APP_NAME">macina-be</Property>
+    </Properties>
+
+    <Appenders>
+        <!-- Console, con pattern leggibile -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+
+        <!-- RollingFile: un file per giorno, con rotazione per dimensione -->
+        <RollingFile name="AppFile"
+                     fileName="${LOG_DIR}/${APP_NAME}.log"
+                     filePattern="${LOG_DIR}/archive/${APP_NAME}-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${FILE_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="50 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- Livelli specifici per i tuoi package -->
+        <Logger name="it.credem.macina_be" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AppFile"/>
+        </Logger>
+
+        <!-- Verbosità più bassa per HTTP/Tempi di boot -->
+        <Logger name="org.springframework" level="INFO"/>
+        <Logger name="org.hibernate" level="WARN"/>
+        <Logger name="io.temporal" level="INFO"/>
+
+        <!-- ROOT -->
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AppFile"/>
+        </Root>
+    </Loggers>
+</Configuration>
