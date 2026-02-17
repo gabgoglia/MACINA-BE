@@ -1,6 +1,7 @@
 package it.credem.macina_be.temporal.workflow.impl;
 
 import io.temporal.activity.ActivityOptions;
+import io.temporal.common.RetryOptions;
 import io.temporal.workflow.Workflow;
 import it.credem.macina_be.temporal.activities.HelloActivities;
 import it.credem.macina_be.temporal.workflow.HelloWorkflow;
@@ -13,6 +14,12 @@ public class HelloWorkflowImpl implements HelloWorkflow {
             HelloActivities.class,
             ActivityOptions.newBuilder()
                     .setStartToCloseTimeout(Duration.ofSeconds(10))
+                    .setRetryOptions(
+                            RetryOptions.newBuilder()
+                                    .setInitialInterval(Duration.ofSeconds(1))
+                                    .setMaximumAttempts(3)
+                                    .build()
+                    )
                     .build()
     );
 
