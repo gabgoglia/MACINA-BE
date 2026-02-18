@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>21</java.version>
+		<java.version>25</java.version>
 		<temporal.version>1.31.0</temporal.version>
 		<springdoc.openapi.mvc>2.8.15</springdoc.openapi.mvc>
 	</properties>
