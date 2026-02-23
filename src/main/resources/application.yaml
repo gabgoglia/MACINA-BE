@@ -1,10 +1,7 @@
 spring:
   application:
     name: macina-be
-
-  profiles:
-    active: worker #local #worker
-    
+  
 temporal:
   address: 127.0.0.1:7233
   namespace: default
@@ -12,7 +9,7 @@ temporal:
 server:
   servlet:
     context-path: /macina-be
-    
+
 logging:
   level:
     root: INFO
