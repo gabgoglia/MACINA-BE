@@ -1,0 +1,5 @@
+<build>
+    <imagename>#{image-name}#</imagename>
+    <imagetag>#{build-number}#</imagetag>
+    <imagedigest>#{image-digest}#</imagedigest>
+</build>

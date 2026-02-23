@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    gateway: enabled
+    app: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: macina-be
+    app.kubernetes.io/managed-by: ArgoCD
+spec:
+  selector:
+    app.kubernetes.io/name: {{ .Release.Name }}
+  type: NodePort
+  ports:
+    - name: http-{{ .Release.Name }}
+      port: 80
+      protocol: TCP
+      targetPort: 8080

@@ -1,0 +1,267 @@
+trigger: none
+
+variables:
+  - group: 'all-registry-parameters'
+  - group: 'macina_common'
+  - name: serviceVersion
+    value: 1.0.0-$(Build.BuildNumber)
+
+stages:
+  
+  ########################################################################################################################
+  #  S T A G E    M A V E N
+  ########################################################################################################################
+  
+  - stage: Build
+    pool:
+      name:  ManagedPoolCredemBuild
+      demands:
+        - ImageOverride -equals Linux
+    jobs:
+      - job: Build
+        
+        variables:
+          MavenGoal: 'clean verify sonar:sonar deploy'
+          decoratorRosa: true
+        
+        steps:
+          
+          
+          
+          # --- SONARQUBE PREPARE (DA MODELLO) ---
+          - task: SonarQubePrepare@7
+            displayName: 'Prepare analysis on SonarQube'
+            inputs:
+              SonarQube: 'CredemSonar'
+              scannerMode: 'Other'
+              projectKey: '$(Build.Repository.Name)'
+              projectName: '$(Build.Repository.Name)'
+              extraProperties: |
+                sonar.java.binaries=$(Build.SourcesDirectory)/target/classes
+                sonar.coverage.jacoco.xmlReportPath=$(Build.SourcesDirectory)/target/site/jacoco/jacoco.xml
+                sonar.junit.reportPaths=$(Build.SourcesDirectory)/target/surefire-reports,$(Build.SourcesDirectory)/target/failsafe-reports
+            env:
+              NODE_EXTRA_CA_CERTS: $(Agent.ToolsDirectory)/credemSecurity/credem_chain_linux.pem
+          
+          - script: echo 'version $(serviceVersion)'
+          
+          # --- ATTUALIZZA POM.XML (DA MODELLO) ---
+          - task: DevopsAttualizzaVariabili@0
+            displayName: 'DevopsAttualizzaVariabili (pom.xml)'
+            inputs:
+              rootDir: '$(Build.SourcesDirectory)'
+              targetFiles: '**/pom.xml'
+              prefissoToken: '#{'
+              suffissoToken: '}#'
+          
+          # --- TASK MAVEN MODIFICATO ---
+          - task: JFrogMaven@1
+            displayName: "Compilazione, Analisi Sonar e Deploy Artefatti"
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: '$(MavenGoal)'
+              artifactoryResolverService: 'JfrogCloudArtifactory'
+              targetResolveReleaseRepo: 'virtualCredem'
+              targetResolveSnapshotRepo: 'virtualCredem'
+              artifactoryDeployService: 'JfrogCloudArtifactory'
+              targetDeployReleaseRepo: 'macina-release'
+              targetDeploySnapshotRepo: 'macina-snapshot'
+              javaHomeOption: 'JDKVersion'
+              options: '-Dmaven.test.failure.ignore=true'
+              buildName: '$(Build.DefinitionName)'
+              buildNumber: '$(Build.BuildNumber)'
+              collectBuildInfo: true
+            env:
+              JAVA_HOME: $(JAVA_HOME_25_X64)
+              PATH: $(JAVA_HOME_25_X64)/bin;$(PATH)
+          
+          
+          #          - task: JFrogPublishBuildInfo@1
+          #            inputs:
+          #              artifactoryConnection: 'JfrogCloudArtifactory'
+          #              buildName: '$(Build.DefinitionName)'
+          #              buildNumber: '$(Build.BuildNumber)'
+          
+          
+          
+          # --- PUBBLICAZIONE TEST ---
+          - task: PublishTestResults@2
+            displayName: "Pubblicazione Unit Test e Integration Test"
+            inputs:
+              testResultsFormat: 'JUnit'
+              searchFolder: '$(System.DefaultWorkingDirectory)/target'
+              testRunTitle: 'macina-be'
+              testResultsFiles: |
+                **/surefire-reports/TEST-*.xml
+                **/failsafe-reports/TEST-*.xml
+              mergeTestResults: true
+              failTaskOnFailedTests: true
+          
+          - task: SonarQubePublish@7
+            displayName: 'Publish analysis results to SonarQube'
+            inputs:
+              continueOnError: true
+            env:
+              NODE_EXTRA_CA_CERTS: $(Agent.ToolsDirectory)/credemSecurity/credem_chain_linux.pem
+          
+          - task: CopyFiles@2
+            displayName: 'Copy report files'
+            inputs:
+              SourceFolder: '$(Build.SourcesDirectory)'
+              Contents: '**/target/surefire-reports/**'
+              TargetFolder: '$(Agent.TempDirectory)/surefire-reports'
+              Overwrite: true
+          
+          - task: ArchiveFiles@2
+            displayName: 'Archive report'
+            inputs:
+              rootFolderOrFile: '$(Agent.TempDirectory)/surefire-reports'
+              includeRootFolder: false
+              archiveType: 'zip'
+              replaceExistingArchive: true
+              verbose: true
+              archiveFile: '$(Build.ArtifactStagingDirectory)/surefire-reports/reports.$(Build.BuildId).zip'
+          
+          - task: PublishPipelineArtifact@1
+            displayName: "Pubblicazione surefire-reports"
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/surefire-reports'
+              artifact: 'surefire-report'
+              publishLocation: 'pipeline'
+          
+          # --- PUBBLICAZIONE ARTEFATTO 'Installazione' (JAR) ---
+          - task: CopyFiles@2
+            displayName: Copia artefatti di build in staging directory
+            inputs:
+              SourceFolder: '$(Build.SourcesDirectory)/target'
+              Contents: |
+                *.jar
+              TargetFolder: '$(Build.StagingDirectory)/package'
+          
+          - task: PublishPipelineArtifact@1
+            displayName: "Publicazione su Azure Devops"
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/package'
+              artifact: 'Installazione'
+              publishLocation: 'pipeline'
+  
+  
+  ########################################################################################################################
+  #  S T A G E    D O C K E R    B U I L D
+  ########################################################################################################################
+  
+  - stage: DockerBuild
+    displayName: Creazione Docker Image
+    jobs:
+      - job: Build
+        pool:
+          name: ManagedPoolCredemBuild
+          demands:
+            - ImageOverride -equals Linux
+        
+        variables:
+          - group: 'all-registry-parameters'
+          - name: "build-number"
+            value: $(build.buildNumber)
+          
+          - name: "image-name"
+            value: 'macina-docker/macina-be'
+          - name: "targetJarFolder"
+            value: "artifact-jar"
+          
+          - name: "image-digest"
+            value: ' '
+          - name: "targetJarPath"
+            value: "$(Build.SourcesDirectory)/$(targetJarFolder)"
+          - name: "decoratorRosa"
+            value: true
+        
+        steps:
+          
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              buildType: 'current'
+              artifactName: 'Installazione'
+              itemPattern: '**/*.jar'
+              targetPath: '$(targetJarPath)'
+          
+          - bash: |
+              echo "$(basename $(ls $(targetJarPath)/*))"
+              echo "##vso[task.setvariable variable=TARGET_JAR_NAME;]$(basename $(ls $(targetJarPath)/*))"
+            name: RecuperoNomeArtefattoCorrente
+          
+          - bash: |
+              echo TARGET_JAR_PATH="$(targetJarPath)"
+              echo TARGET_JAR_NAME="$(TARGET_JAR_NAME)"
+            name: DebugInfo
+          
+          - task: Docker@2
+            displayName: "Docker login cloud"
+            inputs:
+              containerRegistry: 'JfrogCloudDockerBuild'
+              command: 'login'
+              repository: $(jfrogGenericUrl)
+          
+          - task: DevopsAttualizzaVariabili@0
+            displayName: "Attualizza Variabili Dockerfile"
+            inputs:
+              targetFiles: '**/Dockerfile'
+              prefissoToken: '#{'
+              suffissoToken: '}#'
+          
+          - task: Docker@2
+            displayName: Docker build
+            inputs:
+              containerRegistry: 'JfrogCloudDockerBuild'
+              command: 'build'
+              Dockerfile: '**/Dockerfile'
+              tags: $(build-number)
+              repository: $(image-name)
+              arguments: |
+                --build-arg TARGET_JAR_PATH=$(targetJarFolder)
+                --build-arg TARGET_JAR_NAME=$(TARGET_JAR_NAME)
+          
+          - task: JFrogDocker@1
+            displayName: 'JFrog Docker Scan (XRay)'
+            inputs:
+              command: 'Scan'
+              xrayConnection: 'JfrogCloudXray'
+              imageName: '$(jfrogGenericUrl)/$(image-name):$(build-number)'
+              watchesSource: 'watches'
+              watches: 'Security_watch_1,Security_watch_gt'
+              allowFailBuild: true
+          
+          - task: JFrogDocker@1
+            displayName: 'JFrog Docker Push'
+            inputs:
+              command: 'Push'
+              artifactoryConnection: 'JfrogCloudArtifactory'
+              imageName: '$(jfrogGenericUrl)/$(image-name):$(build-number)'
+              threads: '3'
+              skipLogin: true
+          
+          - task: JfrogCliV2@1
+            displayName: "Estrazione digest"
+            inputs:
+              jfrogPlatformConnection: 'jFrogCloudPlatform'
+              command: |
+                jf rt s $(image-name)/$(build-number)/manifest.json | jq -r '.[0].props."docker.manifest.digest"[0]' > pippo.txt && response1=$(cat pippo.txt) && echo $response1 && echo "##vso[task.setvariable variable=image-digest]$response1"
+          
+          - task: DevopsAttualizzaVariabili@0
+            inputs:
+              targetFiles: '**/datibuild.xml'
+              prefissoToken: '#{'
+              suffissoToken: '}#'
+          
+          - task: CopyFiles@2
+            inputs:
+              SourceFolder: '$(Build.SourcesDirectory)'
+              Contents: '**/datibuild.xml'
+              TargetFolder: '$(Build.ArtifactStagingDirectory)'
+          
+          - task: PublishPipelineArtifact@1
+            displayName: "Publicazione su Azure Devops"
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)'
+              artifact: 'drop'
+              publishLocation: 'pipeline'

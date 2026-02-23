@@ -1,0 +1,16 @@
+image:
+  name: '#{internal-registry}#/#{imagename}#'
+  tag:  '#{imagetag}#'
+
+application:
+  name: "macina-be"
+
+logging:
+  level:
+    root: '#{logging.level.root}#'
+
+istio:
+  env:
+    suffix: '#{istio.env.suffix}#'
+  vs:
+    ikube: '#{istio.vs.ikube}#'

@@ -1,0 +1,42 @@
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: Rilasci/RILASCI_TEMPLATE_YML
+      ref: refs/heads/main
+  pipelines:
+    - pipeline: _BUILD_ARTIFACTS
+      source: "macina-sample-be-service_build" #TODO deve essere il nome del file di pipeline
+      trigger: none
+
+trigger: none
+
+extends:
+  template: MACINA/template_argocd_stcp.yml@templates
+  parameters:
+    namespace: "backend"
+    nomeApplicazione: "macina-be"
+    cartellaHelm: "deploy/helm"
+    pathDatiBuild: "drop/datibuild.xml"
+    esponiApiman: N
+    jFrogCloud: true
+    VariabiliSviluppo:
+      - group: macina_common
+      - group: credem-svil
+      - group: rosace-test
+      - group: macina-be-svil
+    VariabiliTest:
+      - group: macina_common
+      - group: credem-test
+      - group: rosace-test
+      - group: macina-be-test
+    VariabiliCollaudo:
+      - group: macina_common
+      - group: credem-coll
+      - group: rosace-coll
+      - group: macina-be-coll
+    VariabiliProduzione:
+      - group: macina_common
+      - group: credem-prod
+      - group: rosace-prod
+      - group: macina-be-prod
