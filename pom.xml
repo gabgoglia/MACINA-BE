@@ -28,7 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>25</java.version>
-		<temporal.version>1.31.0</temporal.version>
+		<temporal.version>1.32.1</temporal.version>
 		<springdoc.openapi.mvc>3.0.1</springdoc.openapi.mvc>
 		<org.apache.maven.surefire>3.2.5</org.apache.maven.surefire>
 		<org.sonarsource.scanner.maven>5.3.0.6276</org.sonarsource.scanner.maven>
