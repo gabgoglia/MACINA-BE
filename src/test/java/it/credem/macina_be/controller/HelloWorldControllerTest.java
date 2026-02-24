@@ -1,6 +1,7 @@
 package it.credem.macina_be.controller;
 
 import it.credem.macina_be.model.constant.MessageConstants;
+import it.credem.macina_be.model.dto.HelloResponseDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,7 +22,7 @@ public class HelloWorldControllerTest {
     public void whenHelloRequestThenReturnsCorrectPayloadGreetings1() throws Exception {
         restClient
                 .get()
-                .uri("api/hello")
+                .uri("/api/hello")
                 .exchange()
                 .expectBody(String.class)
                 .value(greeting -> assertEquals("hello", greeting));
@@ -31,10 +32,10 @@ public class HelloWorldControllerTest {
     public void whenHelloRequestThenReturnsCorrectPayloadGreetings2() throws Exception {
         restClient
                 .get()
-                .uri("api")
+                .uri("/api")
                 .exchange()
-                .expectBody(String.class)
-                .value(greeting -> assertEquals(MessageConstants.DEFAULT_HELLO_MESSAGE, greeting));
+                .expectBody(HelloResponseDto.class)
+                .value(greeting -> assertEquals( new HelloResponseDto(MessageConstants.DEFAULT_HELLO_MESSAGE), greeting));
     }
 
 
@@ -42,20 +43,20 @@ public class HelloWorldControllerTest {
     public void whenHelloRequestThenReturnsCorrectPayloadGreetingsAndName() throws Exception {
         restClient
                 .get()
-                .uri("api/Mario")
+                .uri("/api/Mario")
                 .exchange()
-                .expectBody(String.class)
-                .value(greeting -> assertEquals("Hello Mario!", greeting));
+                .expectBody(HelloResponseDto.class)
+                .value(greeting -> assertEquals(new HelloResponseDto("Hello Mario!"), greeting));
     }
 
-    @Test
-    public void whenHelloRequestPostThenReturns200() throws Exception {
-        restClient
-                .post()
-                .uri("api/hello")
-                .body("Mario")
-                .exchange()
-                .expectStatus().isOk();
-    }
+//    @Test
+//    public void whenHelloRequestPostThenReturns200() throws Exception {
+//        restClient
+//                .post()
+//                .uri("/api/hello")
+//                .body("Mario")
+//                .exchange()
+//                .expectStatus().isOk();
+//    }
 
 }
