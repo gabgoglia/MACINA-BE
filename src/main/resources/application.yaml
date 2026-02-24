@@ -1,15 +1,17 @@
 spring:
   application:
     name: macina-be
-    
+  
   autoconfigure:
     exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
-
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration
+      - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
+  
   profiles:
-    active: worker #local #worker
-    
+    active: local #worker
+
 temporal:
   address: 127.0.0.1:7233
   namespace: default
@@ -17,7 +19,7 @@ temporal:
 server:
   servlet:
     context-path: /macina-be
-    
+
 logging:
   level:
     root: INFO

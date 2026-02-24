@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 @OpenAPIDefinition(info = @Info(title = "CR_ESTATE_BE_HELLO_WORLD_SERVICE_V1", description = "servizio be di esempio", version = "1.0.0"),
         servers = {
-                @Server(url = "/api", description = "Default Server URL")
+                @Server(url = "/macina-be", description = "Default Server URL")
         }
 
 )
@@ -56,7 +56,7 @@ public class HelloWorldController {
                             schema = @Schema(implementation = HelloResponseDto.class))})})
     @GetMapping("/{name}")
     public HelloResponseDto helloWithName(@Parameter(description = "Name of the user to greet")
-                                          @PathVariable String name) {
+                                          @PathVariable("name") String name) {
         return service.sayHelloTo(name);
     }
 
