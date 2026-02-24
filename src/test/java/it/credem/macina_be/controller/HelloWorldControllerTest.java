@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -49,14 +50,15 @@ public class HelloWorldControllerTest {
                 .value(greeting -> assertEquals(new HelloResponseDto("Hello Mario!"), greeting));
     }
 
-//    @Test
-//    public void whenHelloRequestPostThenReturns200() throws Exception {
-//        restClient
-//                .post()
-//                .uri("/api/hello")
-//                .body("Mario")
-//                .exchange()
-//                .expectStatus().isOk();
-//    }
+    @Test
+    public void whenHelloRequestPostThenReturns200() throws Exception {
+        restClient
+                .post()
+                .uri("/api/hello")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("Mario")
+                .exchange()
+                .expectStatus().isOk();
+    }
 
 }

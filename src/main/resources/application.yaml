@@ -7,10 +7,9 @@ spring:
       - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
       - org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration
       - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
-  
+
   profiles:
-    active: local #worker
+    active: local #worker (se si ha temporal attivato in locale, allora local è da sostituire con worker)
 
 temporal:
   address: 127.0.0.1:7233
