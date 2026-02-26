@@ -5,10 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 class MacinaBeApplicationTests {
-
-//	@Test TODO
-//	void contextLoads() {
-//	}
-	@org.junit.jupiter.api.Test
-	void ok() {}
+    @Test
+    void contextLoads() {
+    }
 }
